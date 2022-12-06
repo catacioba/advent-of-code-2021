@@ -15,6 +15,11 @@ object Ch20 extends AocSolver {
       case Dark => '0'
     }
 
+    def toChar: Char = this match {
+      case Light => '#'
+      case Dark => '.'
+    }
+
   end Pixel
 
   object Pixel {
@@ -30,68 +35,28 @@ object Ch20 extends AocSolver {
   }
 
   case class Image(pixels: mutable.Map[(Int, Int), Pixel]) {
-    def enhance(algo: ImageEnhancementAlgorithm): Image = {
-      //      val affectedPositions = lightPixels.flatMap(neighbors)
-      //      val minX = lightPixels.minBy(_._1)._1
-      //      val maxX = lightPixels.maxBy(_._1)._1
-      //      val minY = lightPixels.minBy(_._2)._2
-      //      val maxY = lightPixels.maxBy(_._2)._2
-      //
-      //      val affectedPositions = mutable
-      //        .Set
-      //        .from(minX - 1 to maxX + 1)
-      //        .flatMap(x => (minY - 1 to maxY + 1).map(y => (x, y)))
-      //
-      //      val newLightPixels = affectedPositions.flatMap(p => enhancedPixel(p, algo))
-      //
-      //      Image(newLightPixels)
+    def enhance(algo: ImageEnhancementAlgorithm, hiddenPixels: Pixel): Image = {
+      val positions = pixels.keySet.flatMap(affectedPixels)
 
-      //      val positions = pixels.keySet
-      //
-      //      val minX = positions.minBy(_._1)._1
-      //      val maxX = positions.maxBy(_._1)._1
-      //      val minY = positions.minBy(_._2)._2
-      //      val maxY = positions.maxBy(_._2)._2
-
-      val positions = pixels.keySet.flatMap(neighbors)
-
-      //      val newPixels = pixels.map {
       val newPixels = mutable.Map.empty[(Int, Int), Pixel]
 
       positions.foreach {
         case (x, y) =>
-          //          val (x, y) = pos
           val bs = (-1 to 1)
-            .flatMap(dx => (-1 to 1).map(dy => pixels.getOrElse((x + dx, y + dy), Pixel.Dark).toBinary))
+            .flatMap(dx => (-1 to 1).map(dy => pixels.getOrElse((x + dx, y + dy), hiddenPixels).toBinary))
             .mkString
           val p = Integer.parseInt(bs, 2)
           val newPixel = algo.line(p)
 
-          //          (x, y) -> newPixel
           newPixels.put((x, y), newPixel)
       }
 
       Image(newPixels)
     }
 
-    private def neighbors(p: (Int, Int)): Seq[(Int, Int)] = p match {
-      case (x, y) => (-1 to 1).flatMap(dx => (-1 to 1).map(dy => (x + dx, y + dy)))
+    private def affectedPixels(p: (Int, Int)): Seq[(Int, Int)] = p match {
+      case (x, y) => (-2 to 2).flatMap(dx => (-2 to 2).map(dy => (x + dx, y + dy)))
     }
-
-    //    private def enhancedPixel(p: (Int, Int), algo: ImageEnhancementAlgorithm): Option[(Int, Int)] = {
-    //      val bs = p match {
-    //        case (x, y) => (-1 to 1)
-    //          .flatMap(dx => (-1 to 1).map(dy => (x + dx, y + dy)))
-    //          .map(p => if lightPixels.contains(p) then Pixel.Light else Pixel.Dark)
-    //          .map(_.toBinary)
-    //
-    //      }
-    //      val pos = Integer.parseInt(bs.mkString, 2)
-    //      algo.line(pos) match {
-    //        case Pixel.Light => Some(p)
-    //        case Pixel.Dark => None
-    //      }
-    //    }
 
     def litPixels: Int = pixels.count {
       case (_, p) => p match {
@@ -99,29 +64,61 @@ object Ch20 extends AocSolver {
         case Pixel.Dark => false
       }
     }
+
+    def draw(): Unit = {
+      val minX = pixels.minBy(_._1._1)._1._1
+      val maxX = pixels.maxBy(_._1._1)._1._1
+      val minY = pixels.minBy(_._1._2)._1._2
+      val maxY = pixels.maxBy(_._1._2)._1._2
+
+      (minX to maxX).foreach(x => {
+        (minY to maxY).foreach(y => {
+          print(pixels.getOrElse((x, y), Pixel.Dark).toChar)
+        })
+        println()
+      })
+    }
   }
+
+  private def getNewHiddenPixelValue(algorithm: ImageEnhancementAlgorithm, hidden: Pixel) =
+    hidden match {
+      case Pixel.Dark => algorithm.line.head
+      case Pixel.Light => algorithm.line.last
+    }
 
   override def solvePart1(input: Seq[String]): Unit = {
     val (algo, img) = parseInput(input)
 
-    //    val litPixels = img.enhance(algo).enhance(algo).lightPixels.size
-    val litPixels = img.enhance(algo).enhance(algo).litPixels
+    var hiddenPixels = Pixel.Dark
+    var enhancedImg = img.enhance(algo, hiddenPixels)
+
+    hiddenPixels = getNewHiddenPixelValue(algo, hiddenPixels)
+    enhancedImg = enhancedImg.enhance(algo, hiddenPixels)
+
+    val litPixels = enhancedImg.litPixels
 
     println(litPixels)
   }
 
-  override def solvePart2(input: Seq[String]): Unit = {}
+  override def solvePart2(input: Seq[String]): Unit = {
+    val (algo, img) = parseInput(input)
+
+    val enhancedImg = (1 to 50).foldRight((img, Pixel.Dark))((_, t) => {
+      val (img, hiddenPixels) = t
+      val enhancedImg = img.enhance(algo, hiddenPixels)
+      val newHiddenPixels = getNewHiddenPixelValue(algo, hiddenPixels)
+      (enhancedImg, newHiddenPixels)
+    })._1
+
+    val litPixels = enhancedImg.litPixels
+
+    println(litPixels)
+  }
 
   private def parseInput(input: Seq[String]): (ImageEnhancementAlgorithm, Image) = {
     val algo = ImageEnhancementAlgorithm(input.head.map(Pixel.fromChar))
 
     val map = input.drop(2).map(l => l.map(Pixel.fromChar)).toIndexedSeq
-
-    //    val lightPixels = mutable.Set.empty[(Int, Int)]
-    //
-    //    map.indices.map(x => map(x).indices.map(y => lightPixels.add((x, y))))
-    //
-    //    val img = Image(lightPixels)
 
     val pixels = mutable.Map.empty[(Int, Int), Pixel]
 

@@ -2,7 +2,7 @@ package edu.aoc
 
 import scala.io.{BufferedSource, Source}
 
-trait AocSolver {
+private trait AocSolver {
 
   def challenge(): String
 
@@ -28,12 +28,12 @@ trait AocSolver {
     solvePart2(finalInput)
   }
 
-  def readTestInput(): Seq[String] =
+  private def readTestInput(): Seq[String] =
     readFromFile(s"data/${challenge()}/test.txt")
 
-  def readFinalInput(): Seq[String] = readFromFile(s"data/${challenge()}/final.txt")
+  private def readFinalInput(): Seq[String] = readFromFile(s"data/${challenge()}/final.txt")
 
-  def readFromFile(filename: String): Seq[String] = {
+  private def readFromFile(filename: String): Seq[String] = {
     val bs = Source.fromFile(filename)
     bs.getLines().toSeq
   }
