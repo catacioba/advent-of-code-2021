@@ -27,17 +27,6 @@ object Ch21 extends AocSolver {
     lazy val quantumMoveCounts: Seq[(Int, Int)] = {
       dies.groupMapReduce(_.sum)(_ => 1)(_ + _).toSeq
     }
-
-    //    def moveQuantumDice: List[Player] = {
-    //      dies.map {
-    //        case x :: y :: z :: Nil => this.move(x + y + z)
-    //      }
-    //    }
-
-    //    def moveQuantumDice2: Unit = {
-    //      dies.map
-    //        case
-    //    }
   }
 
   @tailrec
@@ -57,18 +46,17 @@ object Ch21 extends AocSolver {
   private def play(p1: Player, p2: Player, dice: Int): (Player, Player, Int) = {
     @tailrec
     def playAux(p1: Player, p2: Player, dice: Int, firstPlayerPlays: Boolean, rolls: Int): (Player, Player, Int) = {
-      //            println(s"$p1 $p2 $dice $firstPlayerPlays $rolls")
       if p1.score >= 1000 then return (p1, p2, rolls)
       if p2.score >= 1000 then return (p2, p1, rolls)
 
       if firstPlayerPlays then {
         playAux(p1.moveDice(dice),
-                p2,
-                modulo(dice + 3, 100), !firstPlayerPlays, rolls + 3)
+          p2,
+          modulo(dice + 3, 100), !firstPlayerPlays, rolls + 3)
       } else {
         playAux(p1,
-                p2.moveDice(dice),
-                modulo(dice + 3, 100), !firstPlayerPlays, rolls + 3)
+          p2.moveDice(dice),
+          modulo(dice + 3, 100), !firstPlayerPlays, rolls + 3)
       }
     }
 
@@ -80,7 +68,6 @@ object Ch21 extends AocSolver {
     val p2 = parsePlayer(input(1))
 
     val (p1Won, p2Won) = playQuantum(p1, p2)
-    //    println(s"$p1Won - $p2Won")
 
     println(math.max(p1Won, p2Won))
   }
@@ -94,7 +81,6 @@ object Ch21 extends AocSolver {
     def playQuantumAux(p1: Player, p2: Player, firstPlayerPlays: Boolean): (Long, Long) = {
       val gameState = GameState(p1, p2, firstPlayerPlays)
       steps += 1
-      //      println(s"$gameState")
 
       if memoizedGameStates.contains(gameState) then memoizedGameStates(gameState)
 
@@ -120,7 +106,6 @@ object Ch21 extends AocSolver {
       }
 
       val res = x.reduce((a, b) => {
-        //        println("aa")
         (a._1 + b._1, a._2 + b._2)
       })
 
@@ -131,10 +116,6 @@ object Ch21 extends AocSolver {
 
     playQuantumAux(p1, p2, true)
   }
-
-  //  private def playQuantumDp(p1: Player, p2: Player): (Long, Long) = {
-  //
-  //  }
 
   private def parsePlayer(s: String): Player = {
     val r = raw"Player (\d+) starting position: (\d+)".r
