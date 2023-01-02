@@ -31,7 +31,9 @@ private trait AocSolver {
   private def readTestInput(): Seq[String] =
     readFromFile(s"data/${challenge()}/test.txt")
 
-  private def readFinalInput(): Seq[String] = readFromFile(s"data/${challenge()}/final.txt")
+  private def readFinalInput(): Seq[String] = readFromFile(
+    s"data/${challenge()}/final.txt"
+  )
 
   private def readFromFile(filename: String): Seq[String] = {
     val bs = Source.fromFile(filename)
